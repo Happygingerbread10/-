@@ -202,11 +202,21 @@ def main() -> None:
                         st.markdown(f"- 📝 메모: {row['memo']}")
                     if row["url"]:
                         st.markdown(f"- 🔗 [링크 바로가기]({row['url']})")
-                    col_del, _ = st.columns([1, 4])
-                    with col_del:
+
+                    # 👉 여기서 '지도에서 보기' 버튼 + 삭제 버튼
+                    btn_col1, btn_col2 = st.columns([1, 1])
+                    with btn_col1:
+                        if st.button("🗺 지도에서 보기", key=f"view_{row['id']}"):
+                            # 이 맛집 위치를 현재 선택된 위치로 설정
+                            st.session_state["current_lat"] = float(row["lat"])
+                            st.session_state["current_lon"] = float(row["lon"])
+                            # 화면 다시 그리기 → 오른쪽 지도 중심이 이 좌표로 이동
+                            st.experimental_rerun()
+                    with btn_col2:
                         if st.button("🗑 삭제", key=f"del_{row['id']}"):
                             delete_restaurant(conn, int(row["id"]))
                             st.experimental_rerun()
+
                     st.markdown("---")
 
     # -------------------------
@@ -219,7 +229,7 @@ def main() -> None:
         center_lat = float(st.session_state["current_lat"])
         center_lon = float(st.session_state["current_lon"])
 
-        m = folium.Map(location=[center_lat, center_lon], zoom_start=13)
+        m = folium.Map(location=[center_lat, center_lon], zoom_start=15)
 
         # 이미 저장된 맛집들 마커 표시
         if not df.empty:
@@ -235,7 +245,7 @@ def main() -> None:
                     tooltip=popup_text,
                 ).add_to(m)
 
-        # 현재 선택된 위치 마커
+        # 현재 선택된 위치 마커 (빨간색)
         folium.Marker(
             [center_lat, center_lon],
             popup="현재 선택된 위치",
@@ -244,6 +254,7 @@ def main() -> None:
         ).add_to(m)
 
         st.markdown("지도를 클릭하면, 그 위치가 **현재 선택된 위치**가 되고 왼쪽 폼에 반영됩니다.")
+        st.markdown("또는 아래 리스트에서 **‘지도에서 보기’** 버튼을 누르면 그 맛집 위치로 바로 이동합니다.")
 
         map_data: Dict[str, Any] = st_folium(m, height=500, width="100%")
 
