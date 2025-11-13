@@ -7,6 +7,13 @@ import streamlit as st
 import folium
 from streamlit_folium import st_folium
 
+def safe_rerun():
+    """Streamlit 버전에 따라 st.rerun 또는 st.experimental_rerun 호출"""
+    if hasattr(st, "rerun"):
+        st.rerun()
+    else:
+        st.experimental_rerun()
+
 
 DB_PATH = "restaurants.db"
 DEFAULT_LAT = 37.566535   # 서울 시청 근처
@@ -211,11 +218,11 @@ def main() -> None:
                             st.session_state["current_lat"] = float(row["lat"])
                             st.session_state["current_lon"] = float(row["lon"])
                             # 화면 다시 그리기 → 오른쪽 지도 중심이 이 좌표로 이동
-                            st.experimental_rerun()
+                            safe_rerun()
                     with btn_col2:
                         if st.button("🗑 삭제", key=f"del_{row['id']}"):
                             delete_restaurant(conn, int(row["id"]))
-                            st.experimental_rerun()
+                            safe_rerun()
 
                     st.markdown("---")
 
